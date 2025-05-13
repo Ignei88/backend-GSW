@@ -6,20 +6,27 @@ describe('GET /productos', () => {
  let testProductId;
 
  // Datos de prueba para crear y actualizar productos
- const newProduct = {
- nombre: 'Test Product',
- descripcion: 'This is a test product',
- precio: 10.99,
- stock: 50,
- id_categoria: 1 // Asegúrate de que esta categoría exista en tu DB de prueba
- };
+
+
+
+const newProduct = {
+    nombre_producto: 'Test Product',
+    descripcion: 'This is a test product',
+    precio_venta: 10.99,
+    precio_compra: 8.50,
+    id_categoria: 13, // Asegúrate de que esta categoría exista en tu DB de prueba
+    codigo_barras: '1234567890123',
+    activo: 1
+};
 
  const updatedProduct = {
- nombre: 'Updated Test Product',
- descripcion: 'This product has been updated',
- precio: 15.50,
- stock: 100,
- id_categoria: 2 // Asegúrate de que esta categoría exista en tu DB de prueba
+    nombre_producto: 'Test update Product',
+    descripcion: 'This is a update test product',
+    precio_venta: 13.99,
+    precio_compra: 4.50,
+    id_categoria: 13, // Asegúrate de que esta categoría exista en tu DB de prueba
+    codigo_barras: '1234567890124',
+    activo: 1
  };
 
  // Hook para crear un producto de prueba antes de las pruebas que lo necesitan

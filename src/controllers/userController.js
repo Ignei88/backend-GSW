@@ -65,7 +65,7 @@ export const EliminarEmpleado = async (req, res) => {
         if (!email) {
             return res.status(400).json({ message: "Se requiere el email del empleado" });
         }
-        const [result] = await pool.query(
+        const [result] = await db.query(
             'DELETE FROM empleados WHERE email = ?',
             [email]
           );
