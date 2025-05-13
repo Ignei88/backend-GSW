@@ -57,6 +57,7 @@ describe('User Routes Tests', () => {
       expect(response.statusCode).toBe(400);
       expect(response.body).toHaveProperty('error', 'Faltan datos de registro');
   });
+});
 
   describe('GET /api/users/users (ConsultarUsuario)', () => {
     test('should get all users with status 200', async () => {
@@ -71,17 +72,15 @@ describe('User Routes Tests', () => {
   describe('GET /api/users/login (iniciarSession)', () => {
   test('debería iniciar sesión con credenciales válidas', async () => {
 
-    // Ahora iniciamos sesión (como es GET, usamos query)
     const response = await request(app)
-      .get('/api/users/login')
-      .query({
-        'email': testUser.email,
+      .get('/api/users/login') // Cambiado a GET
+      .query({ // Usando query parameters
+        email: testUser.email,
         'password': testUser.password
       });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty('success', true);
-  });
 });
 
 
@@ -89,27 +88,26 @@ describe('User Routes Tests', () => {
       const response = await request(app)
         .get('/api/users/login')
         .query({
-          email: 'nonexistent@example.com',
+          email: 'nonexistentuser@example.com',
           password: 'wrongpassword'
         });
-      
       expect(response.statusCode).toBe(500);
     });
   });
 
   describe('DELETE /api/users/users (EliminarEmpleado)', () => {
     test('should delete an employee with status 400', async () => {
-      // Primero registramos un empleado para eliminar
+      // Primero registramos un empleado para eliminar (usando el email de testEmployee)
       const registerResponse = await request(app)
         .post('/api/users/users')
         .send(testEmployee);
       
       const deleteResponse = await request(app)
         .delete('/api/users/users')
-        .send({ email: testEmployee.email });
-      
-      expect(deleteResponse.statusCode).toBe(500);
-      expect(deleteResponse.body).toHaveProperty('message', 'Empleado eliminado exitosamente');
+        .send({ email: testEmployee.email }); // Enviando email en el body
+
+      expect(deleteResponse.statusCode).toBe(200); // Esperando estado 200 para éxito
+      expect(deleteResponse.body).toHaveProperty('message', 'Usuario eliminado exitosamente'); // Mensaje ajustado
     });
 
     test('should fail without employee ID (status 400)', async () => {
