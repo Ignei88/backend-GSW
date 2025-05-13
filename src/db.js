@@ -10,6 +10,11 @@ export const db = createPool({
     port: 3306,
 })
 
-db.getConnection()
-    .then(() => console.log('Database connected'))
-    .catch((err) => console.error('Database connection failed:', err));
+db.getConnection((err, connection) => {
+  if (err) throw err;
+  connection.ping((pingErr) => {
+    if (pingErr) console.error('Ping failed');
+    else console.log('Database connected');
+    connection.release();
+  });
+});

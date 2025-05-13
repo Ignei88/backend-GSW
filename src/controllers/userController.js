@@ -5,7 +5,7 @@ const saltRounds = 10;
 export const RegistrarUsuario = async (req, res) => {
     try {
         const { nombre, apellido, email, password } = req.body;
-        
+        console.log(req.body);
         if (!nombre || !apellido || !email || !password) {
             return res.status(400).json({ error: 'Faltan datos de registro' });
         }
@@ -61,13 +61,13 @@ export const RegistrarEmpleado = async (req, res) => {
 
 export const EliminarEmpleado = async (req, res) => {
     try {
-        const { id } = req.params;
-        if (!id) {
-            return res.status(400).json({ message: "Se requiere el ID del empleado" });
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Se requiere el email del empleado" });
         }
         const [result] = await pool.query(
-            'DELETE FROM empleados WHERE id = ?',
-            [id]
+            'DELETE FROM empleados WHERE email = ?',
+            [email]
           );
         if (!result) {
             return res.status(404).json({ message: "Empleado no encontrado" });
