@@ -5,10 +5,6 @@ import { db } from '../db.js';
 describe('GET /productos', () => {
  let testProductId;
 
- // Datos de prueba para crear y actualizar productos
-
-
-
 const newProduct = {
     nombre_producto: 'Test Product',
     descripcion: 'This is a test product',
@@ -28,164 +24,148 @@ const newProduct = {
     codigo_barras: '1234567890124',
     activo: 1
  };
-
+ 
  // Hook para crear un producto de prueba antes de las pruebas que lo necesitan
  beforeAll(async () => {
- try {
- const [result] = await db.query(
- 'INSERT INTO productos (nombre, descripcion, precio, stock, id_categoria) VALUES (?, ?, ?, ?, ?)',
- [newProduct.nombre, newProduct.descripcion, newProduct.precio, newProduct.stock, newProduct.id_categoria]
- );
- testProductId = result.insertId;
- console.log(`Producto de prueba creado con ID: ${testProductId}`);
- } catch (error) {
- console.error('Error creating test product:', error);
- throw error; // Lanza el error para que la prueba falle si la creación inicial falla
- }
+    try {
+      const [result] = await db.query(
+         'INSERT INTO productos (nombre_producto, descripcion, precio_venta, precio_compra, id_categoria, codigo_barras, activo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+         [
+            newProduct.nombre_producto,
+            newProduct.descripcion,
+            newProduct.precio_venta,
+            newProduct.precio_compra,
+            newProduct.id_categoria,
+            newProduct.codigo_barras,
+            newProduct.activo
+         ]
+      );
+      testProductId = result.insertId;
+      console.log(`Producto de prueba creado con ID: ${testProductId}`);
+    } catch (error) {
+      console.error('Error creating test product:', error);
+      throw error;
+    }
  });
 
  // Limpiar después de las pruebas
  afterAll(async () => {
- if (testProductId) {
- try {
- await db.query('DELETE FROM productos WHERE id_producto = ?', [testProductId]);
- console.log(`Producto de prueba con ID ${testProductId} eliminado.`);
- } catch (error) {
- console.error('Error deleting test product:', error);
- }
- }
- // Aumenta el timeout para el cierre de la conexión
- await new Promise(resolve => setTimeout(resolve, 500)); // Pequeña pausa
- if (db && typeof db.end === 'function') {
- try {
- await db.end();
- } catch (error) {
- console.error('Error al cerrar la conexión:', error);
- }
- }
- }, 10000); // 10 segundos de timeout para afterAll
+    if (testProductId) {
+      try {
+         await db.query('DELETE FROM productos WHERE id_producto = ?', [testProductId]);
+         console.log(`Producto de prueba con ID ${testProductId} eliminado.`);
+      } catch (error) {
+         console.error('Error deleting test product:', error);
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (db && typeof db.end === 'function') {
+      try {
+         await db.end();
+      } catch (error) {
+         console.error('Error al cerrar la conexión:', error);
+      }
+    }
+ }, 10000);
 
-    test('should return with a 200 status code (getProducts)', async () => {
-        const response = await request(app).get('/api/productos/productos').send();
- expect(response.statusCode).toBe(200);
- expect(Array.isArray(response.body)).toBe(true); // Espera un array de productos
+ test('should return with a 200 status code (getProducts)', async () => {
+    const response = await request(app).get('/api/productos/productos').send();
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
  });
 
  test('should return with a 200 status code and a product (getProduct)', async () => {
- // Asegúrate de que testProductId esté definido antes de esta prueba
- if (!testProductId) throw new Error('testProductId is not defined');
-
- const response = await request(app).get(`/api/productos/productos/${testProductId}`).send();
- expect(response.statusCode).toBe(200);
- expect(response.body).toHaveProperty('id_producto', testProductId);
- expect(response.body).toHaveProperty('nombre', newProduct.nombre); // Verifica que los datos coincidan con el producto creado
-    });
+    if (!testProductId) throw new Error('testProductId is not defined');
+    const response = await request(app).get(`/api/productos/productos/${testProductId}`).send();
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('id_producto', testProductId);
+    expect(response.body).toHaveProperty('nombre_producto', newProduct.nombre_producto);
+ });
 
  test('should return 404 for a non-existent product (getProduct)', async () => {
- const nonExistentId = 99999; // Un ID que sabes que no existe
- const response = await request(app).get(`/api/productos/productos/${nonExistentId}`).send();
- expect(response.statusCode).toBe(404); // O el código de estado que uses para "no encontrado"
+    const nonExistentId = 99999;
+    const response = await request(app).get(`/api/productos/productos/${nonExistentId}`).send();
+    expect(response.statusCode).toBe(404);
  });
 
  test('should create a new product with status 201 (crearProductos)', async () => {
- const anotherNewProduct = { // Datos para otro producto de prueba
- nombre: 'Another Test Product',
- descripcion: 'Yet another test product',
- precio: 20.00,
- stock: 25,
- id_categoria: 1
- };
- const response = await request(app).post('/api/productos/productos').send(anotherNewProduct);
- expect(response.statusCode).toBe(201); // O 200, dependiendo de tu API
- expect(response.body).toHaveProperty('message', 'Producto creado exitosamente'); // O el mensaje esperado
- expect(response.body).toHaveProperty('productId'); // Espera que devuelva el ID del nuevo producto
-    });
+    const anotherNewProduct = {
+      nombre_producto: 'Another Test Product',
+      descripcion: 'Yet another test product',
+      precio_venta: 20.00,
+      precio_compra: 15.00,
+      id_categoria: 14,
+      codigo_barras: '9999999999990',
+      activo: 1
+    };
+    const response = await request(app).post('/api/productos/productos').send(anotherNewProduct);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty('message', 'Producto creado correctamente');
+ });
+
  test('should fail to create product with missing data (crearProductos)', async () => {
- const incompleteProduct = { nombre: 'Incomplete' };
- const response = await request(app).post('/api/productos/productos').send(incompleteProduct);
- expect(response.statusCode).toBe(400); // O el código de estado para datos inválidos
- expect(response.body).toHaveProperty('error', 'Faltan datos obligatorios'); // O el mensaje esperado
-    })
+    const incompleteProduct = { nombre_producto: 'Incomplete' };
+    const response = await request(app).post('/api/productos/productos').send(incompleteProduct);
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty('error', 'Todos los campos obligatorios deben ser completados');
+ });
 
  test('should update an existing product with status 200 (actualizarProductos)', async () => {
- // Asegúrate de que testProductId esté definido
- if (!testProductId) throw new Error('testProductId is not defined');
-
- const response = await request(app)
- .put(`/api/productos/productos/${testProductId}`)
- .send(updatedProduct);
-
- expect(response.statusCode).toBe(200);
- expect(response.body).toHaveProperty('message', 'Producto actualizado exitosamente'); // O el mensaje esperado
+    if (!testProductId) throw new Error('testProductId is not defined');
+    const response = await request(app)
+      .put(`/api/productos/productos/${testProductId}`)
+      .send(updatedProduct);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Producto actualizado correctamente');
  });
 
  test('should return 404 when updating a non-existent product (actualizarProductos)', async () => {
- const nonExistentId = 99999;
- const response = await request(app)
- .put(`/api/productos/productos/${nonExistentId}`)
- .send(updatedProduct);
- expect(response.statusCode).toBe(404); // O el código para no encontrado
+    const nonExistentId = 99999;
+    const response = await request(app)
+      .put(`/api/productos/productos/${nonExistentId}`)
+      .send(updatedProduct);
+    expect(response.statusCode).toBe(404);
  });
 
  test('should delete an existing product with status 200 (eliminarProducto)', async () => {
- // Creamos un producto temporal para eliminar
- const tempProduct = {
- nombre: 'Temporary Product',
- descripcion: 'To be deleted',
- precio: 5.00,
- stock: 10,
- id_categoria: 1
- };
- const [result] = await db.query(
- 'INSERT INTO productos (nombre, descripcion, precio, stock, id_categoria) VALUES (?, ?, ?, ?, ?)',
- [tempProduct.nombre, tempProduct.descripcion, tempProduct.precio, tempProduct.stock, tempProduct.id_categoria]
- );
- const tempProductId = result.insertId;
+    const tempProduct = {
+      nombre_producto: 'Temporary Product',
+      descripcion: 'To be deleted',
+      precio_venta: 5.00,
+      precio_compra: 3.00,
+      id_categoria: 14,
+      codigo_barras: '88888888888',
+      activo: 1
+    };
+    const [result] = await db.query(
+      'INSERT INTO productos (nombre_producto, descripcion, precio_venta, precio_compra, id_categoria, codigo_barras, activo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+         tempProduct.nombre_producto,
+         tempProduct.descripcion,
+         tempProduct.precio_venta,
+         tempProduct.precio_compra,
+         tempProduct.id_categoria,
+         tempProduct.codigo_barras,
+         tempProduct.activo
+      ]
+    );
+    const tempProductId = result.insertId;
 
- const response = await request(app).delete(`/api/productos/productos/${tempProductId}`).send();
- expect(response.statusCode).toBe(200);
- expect(response.body).toHaveProperty('message', 'Producto eliminado exitosamente'); // O el mensaje esperado
+    const response = await request(app).delete(`/api/productos/productos/${tempProductId}`).send();
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Producto eliminado correctamente');
  });
 
  test('should return 404 when deleting a non-existent product (eliminarProducto)', async () => {
- const nonExistentId = 99999;
- const response = await request(app).delete(`/api/productos/productos/${nonExistentId}`).send();
- expect(response.statusCode).toBe(404); // O el código para no encontrado
+    const nonExistentId = 99999;
+    const response = await request(app).delete(`/api/productos/productos/${nonExistentId}`).send();
+    expect(response.statusCode).toBe(404);
  });
 
  test('should return with a 200 status code for getCategorias', async () => {
- const response = await request(app).get('/api/productos/categorias').send();
- expect(response.statusCode).toBe(200);
- expect(Array.isArray(response.body)).toBe(true); // Espera un array de categorías
+    const response = await request(app).get('/api/productos/categorias').send();
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
  });
-
+ 
 });
-
-// La conexión a la base de datos se cierra en el afterAll del describe block
-/*
-afterAll(async () => {
- // Aumenta el timeout para el cierre
- await new Promise(resolve => setTimeout(resolve, 500)); // Pequeña pausa
- if (db && typeof db.end === 'function') {
- try {
- await db.end();
- } catch (error) {
- console.error('Error al cerrar la conexión:', error);
- }
- }
-}, 10000); // 10 segundos de timeout para afterAll
-*/
-//    })
-//});
-
-afterAll(async () => {
-    // Aumenta el timeout para el cierre
-    await new Promise(resolve => setTimeout(resolve, 500)); // Pequeña pausa
-    if (db && typeof db.end === 'function') {
-        try {
-            await db.end();
-        } catch (error) {
-            console.error('Error al cerrar la conexión:', error);
-        }
-    }
-}, 10000); // 10 segundos de timeout para afterAll

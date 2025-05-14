@@ -11,7 +11,6 @@ export const registrarVenta = async (req, res) => {
     impuestos,
     descuento,
     total,
-    productos // Por ahora ignorado
   } = req.body;
 
   // Validamos y formateamos datos
@@ -27,10 +26,11 @@ export const registrarVenta = async (req, res) => {
   };
 
   const SQL_VENTA = `
-    INSERT INTO ventas 
-    (id_cliente, id_usuario, id_metodo_pago, fecha_venta, subtotal, impuestos, descuento, total, estado) 
-    VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?)
-  `;
+  INSERT INTO ventas 
+  (id_cliente, id_usuario, id_metodo_pago, fecha_venta, subtotal, impuestos, descuento, estado) 
+  VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)
+`;
+
 
   const values = [
     ventaData.id_cliente,
@@ -39,7 +39,6 @@ export const registrarVenta = async (req, res) => {
     ventaData.subtotal,
     ventaData.impuestos,
     ventaData.descuento,
-    ventaData.total,
     ventaData.estado
   ];
 
@@ -105,7 +104,6 @@ export const getHistorialVentas = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener historial de ventas' });
   }
 };
-
 export const getVentasHoy = async (req, res) => {
   console.log('Obteniendo ventas de hoy');
   const SQL_QUERY = `
@@ -118,12 +116,20 @@ export const getVentasHoy = async (req, res) => {
     GROUP BY v.id_usuario
     ORDER BY total_vendido DESC
   `;
+  
+  let connection;
   try {
-    const [result] = await db.query(SQL_QUERY);
+    connection = await db.getConnection(); // Obtener conexión explícita
+    const [result] = await connection.query(SQL_QUERY);
     console.log('Ventas de hoy encontradas:', result.length);
     res.json(result);
   } catch (err) {
     console.error('Error al consultar ventas de hoy:', err);
     res.status(500).json({ error: 'Error al obtener ventas de hoy' });
+  } finally {
+    if (connection) {
+      connection.release(); // Liberar conexión siempre
+      console.log('Conexión liberada');
+    }
   }
 };

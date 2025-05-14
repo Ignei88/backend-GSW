@@ -1,7 +1,6 @@
 import request from 'supertest';
 import app from '../app.js';
 import { db } from '../db.js';
-import bcrypt from 'bcryptjs';
 
 // Datos de prueba
 const testUser = {
@@ -20,18 +19,21 @@ const testEmployee = {
 
 let createdUserId = 0;
 
-beforeAll(async () => {
-  // Limpiar datos de prueba anteriores si existen
-  await db.query('DELETE FROM usuarios WHERE email IN (?, ?)', 
-    [testUser.email, testEmployee.email]);
-    console.log("usuarios eliminados")
+beforeEach(async () => {
+  // Limpiar datos de prueba antes de cada test
+  await db.query('DELETE FROM usuarios WHERE email IN (?, ?)', [testUser.email, testEmployee.email]);
+  createdUserId = 0;
 });
 
-afterAll(async () => {
-  // Limpiar después de las pruebas
+afterEach(async () => {
+  // Limpiar después de cada test
   if (createdUserId > 0) {
     await db.query('DELETE FROM usuarios WHERE id_usuario = ?', [createdUserId]);
   }
+});
+
+afterAll(async () => {
+  // Cerrar conexión a la base de datos al final de todas las pruebas
   await db.end();
 });
 
@@ -41,11 +43,11 @@ describe('User Routes Tests', () => {
       const response = await request(app)
         .post('/api/users/users')
         .send(testUser);
-      
+
       expect(response.statusCode).toBe(201);
       expect(response.body).toHaveProperty('message', 'Usuario registrado exitosamente');
       expect(response.body).toHaveProperty('userId');
-      
+
       createdUserId = response.body.userId;
     });
 
@@ -53,36 +55,35 @@ describe('User Routes Tests', () => {
       const response = await request(app)
         .post('/api/users/users')
         .send({ nombre: 'Incomplete' });
-      
+
       expect(response.statusCode).toBe(400);
       expect(response.body).toHaveProperty('error', 'Faltan datos de registro');
+    });
   });
-});
 
   describe('GET /api/users/users (ConsultarUsuario)', () => {
     test('should get all users with status 200', async () => {
       const response = await request(app)
         .get('/api/users/users');
-      
+
       expect(response.statusCode).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
   });
 
   describe('GET /api/users/login (iniciarSession)', () => {
-  test('debería iniciar sesión con credenciales válidas', async () => {
+    test('debería iniciar sesión con credenciales válidas', async () => {
+      // Registrar usuario antes de login
+      await request(app).post('/api/users/users').send(testUser);
 
-    const response = await request(app)
-      .get('/api/users/login') // Cambiado a GET
-      .query({ // Usando query parameters
-        email: testUser.email,
-        'password': testUser.password
-      });
+      const response = await request(app).get('/api/users/login').send({
+          email: testUser.email,
+          password: testUser.password
+        });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('success', true);
-});
-
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+    });
 
     test('should fail with invalid credentials', async () => {
       const response = await request(app)
@@ -96,25 +97,25 @@ describe('User Routes Tests', () => {
   });
 
   describe('DELETE /api/users/users (EliminarEmpleado)', () => {
-    test('should delete an employee with status 400', async () => {
-      // Primero registramos un empleado para eliminar (usando el email de testEmployee)
-      const registerResponse = await request(app)
+    test('should delete an employee with status 200', async () => {
+      // Registrar empleado antes de eliminar
+      await request(app)
         .post('/api/users/users')
         .send(testEmployee);
-      
+
       const deleteResponse = await request(app)
         .delete('/api/users/users')
-        .send({ email: testEmployee.email }); // Enviando email en el body
+        .send({ email: testEmployee.email });
 
-      expect(deleteResponse.statusCode).toBe(200); // Esperando estado 200 para éxito
-      expect(deleteResponse.body).toHaveProperty('message', 'Usuario eliminado exitosamente'); // Mensaje ajustado
+      expect(deleteResponse.statusCode).toBe(200);
+      expect(deleteResponse.body).toHaveProperty('message', 'Usuario eliminado exitosamente');
     });
 
     test('should fail without employee ID (status 400)', async () => {
       const response = await request(app)
         .delete('/api/users/users')
         .send({});
-      
+
       expect(response.statusCode).toBe(400);
       expect(response.body).toHaveProperty('message', 'Se requiere el email del empleado');
     });
