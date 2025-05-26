@@ -34,6 +34,7 @@ export const getProducts = async (req, res) => {
 };
 
 export const getCategorias = async (req, res) => {
+  console.log('Consultando categorías');
   const SQL_QUERY = "SELECT * FROM categorias";
   try {
     const [result] = await db.query(SQL_QUERY);
@@ -82,6 +83,7 @@ export const crearProductos = async (req, res) => {
 };
 
 export const actualizarProductos = async (req, res) => {
+  console.log('Actualizando producto');
   const { id } = req.params;
   const {
     id_categoria,

@@ -3,24 +3,12 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { db } from '../db.js'
 
-//const __filename = fileURLToPath(import.meta.url);
-//const __dirname = dirname(__filename);
-
-//let modelo = null;
-
-// Cargar modelo al iniciar
-//(async () => {
-//    console.log("Cargando modelo...");
-//    const modeloPath = `file://${path.join(__dirname, '../modelo/model.json')}`;
-//    modelo = await tf.loadLayersModel(modeloPath);
-//    console.log("Modelo cargado exitosamente.");
-//})();
 
 export const productosMasVendidos = async (req, res) => {
     try {
       console.log("Productos vendidos")
       const [rows] = await db.query(`
-        SELECT p.id_producto, p.nombre_producto, SUM(dv.cantidad) AS total_vendidos
+        SELECT p.id_producto, p.nombre_producto,p.margen_ganancia, SUM(dv.cantidad) AS total_vendidos
         FROM detalle_venta dv
         INNER JOIN productos p ON dv.id_producto = p.id_producto
         GROUP BY p.id_producto, p.nombre_producto

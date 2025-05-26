@@ -25,7 +25,7 @@ export const RegistrarUsuario = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
-export const ConsultarUsuario = async (req, res) => {
+export const ConsultarUsuarios = async (req, res) => {
     try {
         const [result] = await db.query('SELECT * FROM usuarios');
         res.json(result);

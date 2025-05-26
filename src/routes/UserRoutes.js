@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { iniciarSession } from "../controllers/loginController.js";
-import { ConsultarUsuario, RegistrarEmpleado,RegistrarUsuario, EliminarEmpleado } from "../controllers/userController.js";
+import { ConsultarUsuarios, RegistrarEmpleado,RegistrarUsuario, EliminarEmpleado } from "../controllers/userController.js";
 
 const router = Router();
 
-router.get('/users', ConsultarUsuario);
+router.get('/users', ConsultarUsuarios);
 router.post('/users', RegistrarUsuario);
 router.delete('/users',EliminarEmpleado);
-router.get('/login', iniciarSession);
+router.post('/login', iniciarSession);
 
 export default router;
