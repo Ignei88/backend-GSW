@@ -4,7 +4,8 @@ const saltRounds = 10;
 
 export const RegistrarUsuario = async (req, res) => {
     try {
-        const { nombre, apellido, email, password } = req.body;
+        console.log("Registro de usuario iniciado" + req.body);
+        const { nombre, apellido, email, password,id_rool } = req.body;
         console.log(req.body);
         if (!nombre || !apellido || !email || !password) {
             return res.status(400).json({ error: 'Faltan datos de registro' });
